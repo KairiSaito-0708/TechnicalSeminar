@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,6 +11,12 @@ public class GameManager : MonoBehaviour
 
     public Vector3 blueLastCheckPointPosition;
     public Vector3 redLastCheckPointPosition;
+
+    [Header("タイマー設定")]
+    public TextMeshProUGUI timerText;
+
+    private float elapsedTime = 0f;
+    public bool isTimerRunning = true;
 
     void Awake()
     {
@@ -38,6 +45,23 @@ public class GameManager : MonoBehaviour
         else
         {
             Debug.LogError("赤ボールの初期スポーン地点が設定されていません！");
+        }
+    }
+
+    void Update()
+    {
+        if (isTimerRunning)
+        {
+            elapsedTime += Time.deltaTime;
+
+            int minutes = (int)(elapsedTime / 60);
+            int seconds = (int)(elapsedTime % 60);
+            int milliseconds = (int)((elapsedTime - (minutes * 60) - seconds) * 100);
+
+            if (timerText != null)
+            {
+                timerText.text = string.Format("{0:00}:{1:00}:{2:00}", minutes, seconds, milliseconds);
+            }
         }
     }
 }

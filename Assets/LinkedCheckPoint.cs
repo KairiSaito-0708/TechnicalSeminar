@@ -5,27 +5,40 @@ using System.Collections.Generic;
 public class LinkedCheckPoint : MonoBehaviour
 {
     [Header("監視対象")]
-    [Tooltip("このチェックポイントを有効にするために必要なスイッチをすべて設定します。")]
     public List<SwitchPlate> requiredPlates;
 
     [Header("UI設定")]
-    [Tooltip("状態を表示するTextMeshProのテキスト")]
     public TextMeshProUGUI statusText;
 
     [Header("リスポーン地点")]
-    [Tooltip("このチェックポイントでの青ボールの復活地点")]
     public Transform blueRespawnTransform;
-    [Tooltip("このチェックポイントでの赤ボールの復活地点")]
     public Transform redRespawnTransform;
 
+    [Header("サウンド")]
+    [Tooltip("プレートを1つ踏んだ時の音")]
+    public AudioClip platePressedSound;
+    [Tooltip("チェックポイント更新時の音")]
+    public AudioClip checkpointUpdateSound;
+
+    private AudioSource audioSource;
     private bool isActivated = false;
+    private bool isPartiallyPressed = false; 
+
+    void Start()
+    {
+        audioSource = Camera.main.GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            Debug.LogWarning("Main CameraにAudioSourceがありません！", this.gameObject);
+        }
+    }
 
     void Update()
     {
         if (isActivated) return;
 
         int pressedCount = 0;
-        foreach(SwitchPlate plate in requiredPlates)
+        foreach (SwitchPlate plate in requiredPlates)
         {
             if (plate.IsPressed)
             {
@@ -35,18 +48,35 @@ public class LinkedCheckPoint : MonoBehaviour
 
         if (pressedCount == requiredPlates.Count && requiredPlates.Count > 0)
         {
-            statusText.text = "チェックポイント更新";
+            statusText.text = "CheckPoint!";
             GameManager.instance.blueLastCheckPointPosition = blueRespawnTransform.position;
             GameManager.instance.redLastCheckPointPosition = redRespawnTransform.position;
-            isActivated = true; 
+
+            if (audioSource != null && checkpointUpdateSound != null)
+            {
+                audioSource.PlayOneShot(checkpointUpdateSound);
+            }
+
+            isActivated = true;
+            isPartiallyPressed = false;
         }
         else if (pressedCount > 0)
         {
             statusText.text = pressedCount + "/" + requiredPlates.Count;
+
+            if (!isPartiallyPressed)
+            {
+                if (audioSource != null && platePressedSound != null)
+                {
+                    audioSource.PlayOneShot(platePressedSound);
+                }
+                isPartiallyPressed = true;
+            }
         }
         else
         {
             statusText.text = "";
+            isPartiallyPressed = false; 
         }
     }
 }
