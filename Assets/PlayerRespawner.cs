@@ -4,7 +4,7 @@ using UnityEngine;
 public class PlayerRespawner : MonoBehaviour
 {
     [Tooltip("このY座標より下に落ちたらリスポーンする")]
-    public float respawnHeight = 50f;
+    public float respawnHeight = -10f;
 
     private Rigidbody rb;
     private BallIdentifier ballIdentifier;
@@ -13,7 +13,7 @@ public class PlayerRespawner : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         ballIdentifier = GetComponent<BallIdentifier>();
-        
+
         if (ballIdentifier.color == BallIdentifier.BallColor.Blue)
         {
             transform.position = GameManager.instance.blueLastCheckPointPosition;
@@ -37,7 +37,8 @@ public class PlayerRespawner : MonoBehaviour
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        // 復活時、自分の色に合った最新のチェックポイント位置に戻る
+        GameManager.instance.TriggerFallMessage(ballIdentifier.color);
+
         if (ballIdentifier.color == BallIdentifier.BallColor.Blue)
         {
             transform.position = GameManager.instance.blueLastCheckPointPosition;
