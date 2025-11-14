@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using System.Collections;
 using System.Collections.Generic;
 
 public class LinkedCheckPoint : MonoBehaviour
@@ -15,14 +16,16 @@ public class LinkedCheckPoint : MonoBehaviour
     public Transform redRespawnTransform;
 
     [Header("サウンド")]
-    [Tooltip("プレートを1つ踏んだ時の音")]
     public AudioClip platePressedSound;
-    [Tooltip("チェックポイント更新時の音")]
     public AudioClip checkpointUpdateSound;
 
+    [Header("表示設定")]
+    public float textDisplayDuration = 2.0f;
+
     private AudioSource audioSource;
+    private bool isPartiallyPressed = false;
+    private bool isShowingUpdateText = false;
     private bool isActivated = false;
-    private bool isPartiallyPressed = false; 
 
     void Start()
     {
@@ -35,10 +38,13 @@ public class LinkedCheckPoint : MonoBehaviour
 
     void Update()
     {
-        if (isActivated) return;
+        if (isActivated || isShowingUpdateText)
+        {
+            return;
+        }
 
         int pressedCount = 0;
-        foreach (SwitchPlate plate in requiredPlates)
+        foreach(SwitchPlate plate in requiredPlates)
         {
             if (plate.IsPressed)
             {
@@ -48,22 +54,23 @@ public class LinkedCheckPoint : MonoBehaviour
 
         if (pressedCount == requiredPlates.Count && requiredPlates.Count > 0)
         {
-            statusText.text = "CheckPoint!";
             GameManager.instance.blueLastCheckPointPosition = blueRespawnTransform.position;
             GameManager.instance.redLastCheckPointPosition = redRespawnTransform.position;
-
+            
             if (audioSource != null && checkpointUpdateSound != null)
             {
                 audioSource.PlayOneShot(checkpointUpdateSound);
             }
-
+            
+            StartCoroutine(ShowUpdateText());
+            
             isActivated = true;
             isPartiallyPressed = false;
         }
         else if (pressedCount > 0)
         {
-            statusText.text = pressedCount + "/" + requiredPlates.Count;
-
+            statusText.text = "Check Point 1/2";
+            
             if (!isPartiallyPressed)
             {
                 if (audioSource != null && platePressedSound != null)
@@ -76,7 +83,18 @@ public class LinkedCheckPoint : MonoBehaviour
         else
         {
             statusText.text = "";
-            isPartiallyPressed = false; 
+            isPartiallyPressed = false;
         }
+    }
+
+    private IEnumerator ShowUpdateText()
+    {
+        isShowingUpdateText = true;
+        statusText.text = "CheckPoint Complete!";
+        
+        yield return new WaitForSeconds(textDisplayDuration);
+        
+        statusText.text = "";
+        isShowingUpdateText = false;
     }
 }

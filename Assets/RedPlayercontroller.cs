@@ -1,14 +1,19 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
- 
+
+[RequireComponent(typeof(Rigidbody))]
 public class RedPlayerController : MonoBehaviour
 {
     private Rigidbody _rb;
+
+    [Header("操作設定")]
+    public float moveSpeed = 15f;
+
     void Start()
     {
         _rb = GetComponent<Rigidbody>();
     }
- 
+
     void FixedUpdate()
     {
         var direction = Vector3.zero;
@@ -28,10 +33,8 @@ public class RedPlayerController : MonoBehaviour
         {
             direction += Vector3.right;
         }
-        if (Keyboard.current.rightShiftKey.isPressed)
-        {
-            direction += Vector3.up;
-        }
-        _rb.AddForce(direction * 7);
+    
+
+        _rb.AddForce(direction.normalized * moveSpeed);
     }
 }
