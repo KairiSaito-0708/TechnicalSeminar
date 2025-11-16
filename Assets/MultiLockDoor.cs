@@ -18,17 +18,18 @@ public class MultiLockDoor : MonoBehaviour
     public float postDisappearDelay = 0.5f;
 
     [Header("サウンド")]
-    [Tooltip("ドアが開く（消える）時に鳴らす音")]
+    public AudioClip switchPressSound;
     public AudioClip doorOpenSound;
 
     private AudioSource audioSource;
-
     private CameraController cameraController;
     private bool isOpening = false;
     private MonoBehaviour blueControllerScript;
     private MonoBehaviour redControllerScript;
     private Rigidbody blueRb;
     private Rigidbody redRb;
+
+    private HashSet<SwitchPlate> platesAlreadyPressed = new HashSet<SwitchPlate>();
 
     void Start()
     {
@@ -57,25 +58,44 @@ public class MultiLockDoor : MonoBehaviour
     {
         if (isOpening) return;
 
-        if (CheckAllSwitches())
+        bool allSwitchesPressed = true;
+        foreach (SwitchPlate plate in requiredSwitches)
+        {
+            if (plate.IsPressed)
+            {
+                if (!platesAlreadyPressed.Contains(plate))
+                {
+                    platesAlreadyPressed.Add(plate);
+                    if (audioSource != null && switchPressSound != null)
+                    {
+                        audioSource.PlayOneShot(switchPressSound);
+                    }
+                }
+            }
+            else
+            {
+                allSwitchesPressed = false;
+                if (platesAlreadyPressed.Contains(plate))
+                {
+                    platesAlreadyPressed.Remove(plate);
+                }
+            }
+        }
+
+        if (allSwitchesPressed)
         {
             StartCoroutine(OpenDoorSequence());
         }
     }
 
-    private bool CheckAllSwitches()
-    {
-        if (requiredSwitches == null || requiredSwitches.Count == 0) return false;
-        foreach (SwitchPlate plate in requiredSwitches)
-        {
-            if (!plate.IsPressed) return false;
-        }
-        return true;
-    }
-
     private IEnumerator OpenDoorSequence()
     {
         isOpening = true;
+
+        foreach (SwitchPlate plate in requiredSwitches)
+        {
+            plate.IsPermanentlyActive = true;
+        }
 
         cameraController.enabled = false;
         if (blueControllerScript != null) blueControllerScript.enabled = false;

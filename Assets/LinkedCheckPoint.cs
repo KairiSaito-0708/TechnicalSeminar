@@ -16,7 +16,6 @@ public class LinkedCheckPoint : MonoBehaviour
     public Transform redRespawnTransform;
 
     [Header("サウンド")]
-    public AudioClip platePressedSound;
     public AudioClip checkpointUpdateSound;
 
     [Header("表示設定")]
@@ -44,7 +43,7 @@ public class LinkedCheckPoint : MonoBehaviour
         }
 
         int pressedCount = 0;
-        foreach(SwitchPlate plate in requiredPlates)
+        foreach (SwitchPlate plate in requiredPlates)
         {
             if (plate.IsPressed)
             {
@@ -56,29 +55,26 @@ public class LinkedCheckPoint : MonoBehaviour
         {
             GameManager.instance.blueLastCheckPointPosition = blueRespawnTransform.position;
             GameManager.instance.redLastCheckPointPosition = redRespawnTransform.position;
-            
+
             if (audioSource != null && checkpointUpdateSound != null)
             {
                 audioSource.PlayOneShot(checkpointUpdateSound);
             }
-            
+
             StartCoroutine(ShowUpdateText());
-            
+
             isActivated = true;
             isPartiallyPressed = false;
+
+            foreach (SwitchPlate plate in requiredPlates)
+            {
+                plate.IsPermanentlyActive = true;
+            }
         }
         else if (pressedCount > 0)
         {
             statusText.text = "Check Point 1/2";
-            
-            if (!isPartiallyPressed)
-            {
-                if (audioSource != null && platePressedSound != null)
-                {
-                    audioSource.PlayOneShot(platePressedSound);
-                }
-                isPartiallyPressed = true;
-            }
+            isPartiallyPressed = true;
         }
         else
         {
@@ -91,9 +87,9 @@ public class LinkedCheckPoint : MonoBehaviour
     {
         isShowingUpdateText = true;
         statusText.text = "CheckPoint Complete!";
-        
+
         yield return new WaitForSeconds(textDisplayDuration);
-        
+
         statusText.text = "";
         isShowingUpdateText = false;
     }
